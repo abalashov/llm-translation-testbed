@@ -26,7 +26,7 @@ def execute_provider_pipeline(llm_pipeline):
     global sentences
 
     for provider in llm_pipeline:
-        out_file = f"out_{provider}_{llm_providers[provider]['model']}.txt"
+        out_file = f"out_{provider}_{llm_providers[provider]['model']}-{target_language.lower()}.txt"
         print(f"% Executing {provider}-{llm_providers[provider]['model']} pipeline, output to {out_file}:")
         
         if provider == "openai":
