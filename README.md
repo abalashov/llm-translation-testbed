@@ -23,9 +23,21 @@ $ source our-env/bin/activate
 $ (our-env) $ ./translate.py
 ```
 
+### Command-line options:
+
+A full list of command-line options can be obtained via `./translate.py -h`, but the most salient ones are:
+
+* `-tl`, `--target-language` - the target language, in English (e.g. "French"); this is appended to the LLM prompt;
+
+* `-p`, `--prompt` (optional) - the English sentence with which to prompt the LLM. The target language and the sentence to be translated are appended to this prompt, with the appropriate delimiters (e.g. colon). If this parameter is not supplied, a default prompt is used;
+
+* `-i`, `--input-file` - the text file containing input sentences, one sentence per line;
+
+* `-prov`, `--providers` - a comma-separated list of LLM providers to use (e.g. `openai`, `google`, `anthropic`).
+
 ### API keys from environment variables:
 
-In addition to the required and optional command-line arguments, which can be obtained using `./translate.py -h`, it is necessary to provide an API key for every LLM provider suppplied. For example, if the `openai` provider is included in the `--providers` list, the environment variable `OPENAI_API_KEY` must be set, and the same applies for `GOOGLE_API_KEY` and `ANTHROPIC_API_KEY` and so on.
+In addition to the required and optional command-line arguments, it is necessary to provide an API key for every LLM provider suppplied. For example, if the `openai` provider is included in the `--providers` list, the environment variable `OPENAI_API_KEY` must be set, and the same applies for `GOOGLE_API_KEY` and `ANTHROPIC_API_KEY` and so on.
 
 ### Example usage:
 
