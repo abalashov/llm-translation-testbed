@@ -53,7 +53,7 @@ def main():
     llm_pipeline = []
 
     parser = argparse.ArgumentParser(description="Translate a file of sentences using a configurable prompt and a set of LLMs.")
-    parser.add_argument("-i", "--input_file", required=True, type=str, help="Path to the input file")
+    parser.add_argument("-i", "--input-file", required=True, type=str, help="Path to the input file")
     parser.add_argument("-tl", "--target-language", required=True, type=str, help="Target language (natural name, e.g. 'French')")
     parser.add_argument("-p", "--prompt", type=str, help="LLM prompt to prefix to the translation request for every sentence, terminated by language name automatically")
 
