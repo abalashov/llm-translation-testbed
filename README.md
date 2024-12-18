@@ -59,7 +59,7 @@ Authentication is required for data integrity.
 Authentication helps.
 ```
 
-This invocation results in the following output to `out_openai_gpt-4o.txt`:
+This invocation results in the following output to `out_openai_gpt-4o-russian.txt`:
 
 ```
 Система должна быть масштабируемой и эффективной.
