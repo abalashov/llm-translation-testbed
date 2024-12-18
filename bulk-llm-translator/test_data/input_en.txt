@@ -1,0 +1,4 @@
+The system must be scalable and efficient.
+Scalable systems work.
+Authentication is required for data integrity.
+Authentication helps.
