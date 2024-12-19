@@ -69,7 +69,8 @@ def openai_task_runner(idx: int, sentence_chunks: list[str], out_sentences: list
                     "content": prompt_prefix + " " + target_language + ": " + s
                 }
             ],
-            model="gpt-4o"
+            model="gpt-4o",
+            temperature=0.0
         )
 
         if len(resp.choices) > 0:
