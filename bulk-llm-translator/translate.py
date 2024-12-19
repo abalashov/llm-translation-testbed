@@ -19,13 +19,14 @@ llm_providers = {
 target_language="French"
 prompt_prefix="Translate this sentence to"
 sentences=[]
+parallel_runners=10
 
 async def execute_provider_pipeline(llm_pipeline):
     global prompt_prefix
     global target_language
     global sentences
 
-    chunk_size = math.ceil(len(sentences) / 10)
+    chunk_size = math.ceil(len(sentences) / parallel_runners)
     chunks = [sentences[i:i + chunk_size] for i in range(0, len(sentences), chunk_size)]
     # Make a list of lists, in order to preserve ordering.
     sentences_out: list[ list[str] ] = [[] for i in range(0, len(chunks))]
@@ -85,6 +86,7 @@ async def main():
     parser.add_argument("-i", "--input-file", required=True, type=str, help="Path to the input file")
     parser.add_argument("-tl", "--target-language", required=True, type=str, help="Target language (natural name, e.g. 'French')")
     parser.add_argument("-p", "--prompt", type=str, help="LLM prompt to prefix to the translation request for every sentence, terminated by language name automatically")
+    parser.add_argument("-r", "--runners", type=int, help="Number of parallel runners to use", default=10)
 
     parser.add_argument(
         "-prov", "--providers", 
@@ -98,6 +100,9 @@ async def main():
     args = parser.parse_args()
 
     target_language = args.target_language
+
+    if args.runners:
+        parallel_runners = args.runners
 
     if args.prompt:
         prompt_prefix = f"{args.prompt} {target_language}:"
