@@ -5,8 +5,9 @@
 #
 # Alex Balashov <abalashov@evaristesys.com>
 
-import argparse, os, sys, asyncio, math 
+import argparse, os, sys, asyncio, math
 from openai import OpenAI
+from rich.progress import Progress
 
 # Identifiers of acceptable LLM providers, and their permitted models.
 llm_providers = {
@@ -39,10 +40,17 @@ async def execute_provider_pipeline(llm_pipeline):
         async_tasks = [] 
 
         if provider == "openai":
-            async_tasks: list[asyncio.Task] = [asyncio.to_thread(openai_task_runner, i, chunks[i], sentences_out) for i in range(0, len(chunks))]
-            print(f"% Starting {len(async_tasks)} async tasks for OpenAI")
-            await asyncio.gather(*async_tasks)
-            print(f"% Finished OpenAI tasks with {len(sentences_out)} sentences translated")
+            with Progress() as progress:
+                progress_bars = [progress.add_task(f"Runner {i}", total=len(chunks[i])) for i in range(0, len(chunks))]
+
+                async_tasks: list[asyncio.Task] = [
+                    asyncio.to_thread(openai_task_runner, i, chunks[i], progress, progress_bars[i], sentences_out) 
+                    for i in range(0, len(chunks))
+                ]
+
+                print(f"% Starting {len(async_tasks)} async tasks for OpenAI")
+                await asyncio.gather(*async_tasks)
+                print(f"% Finished OpenAI tasks with {len(sentences_out)} sentences translated")
 
             # Write to file.
             with open(out_file, "w") as f:
@@ -52,7 +60,13 @@ async def execute_provider_pipeline(llm_pipeline):
 
 # OpenAI task runner, which prompts OpenAI to translate a chunk of sentences.
 # TODO: Should be moved to a separate module for cleanliness.
-def openai_task_runner(idx: int, sentence_chunks: list[str], out_sentences: list[ list[str] ]):
+def openai_task_runner(
+    idx: int, 
+    sentence_chunks: list[str], 
+    progress_mgr: Progress,
+    progress_bar: any,
+    out_sentences: list[ list[str] ]
+):
     global prompt_prefix, target_language
     requests_serviced: int = 0
 
@@ -74,6 +88,7 @@ def openai_task_runner(idx: int, sentence_chunks: list[str], out_sentences: list
         if len(resp.choices) > 0:
             out_sentences[idx].append(resp.choices[0].message.content)
             requests_serviced = requests_serviced + 1
+            progress_mgr.update(progress_bar, advance=1)
 
     print(f"% OpenAI task {idx} completed with {requests_serviced} sentences translated")
 
