@@ -22,14 +22,11 @@ sentences=[]
 parallel_runners=10
 
 async def execute_provider_pipeline(llm_pipeline):
-    global prompt_prefix
-    global target_language
-    global sentences
-    global parallel_runners
+    global prompt_prefix, target_language, sentences, parallel_runners
 
     chunk_size = math.ceil(len(sentences) / parallel_runners)
     chunks = [sentences[i:i + chunk_size] for i in range(0, len(sentences), chunk_size)]
-    
+
     # Make a list of lists, in order to preserve ordering.
     sentences_out: list[ list[str] ] = [[] for i in range(0, len(chunks))]
 
