@@ -5,7 +5,7 @@
 #
 # Alex Balashov <abalashov@evaristesys.com>
 
-import argparse, os, sys 
+import argparse, os, sys, asyncio, math 
 from openai import OpenAI
 
 # Identifiers of acceptable LLM providers, and their permitted models.
@@ -20,35 +20,64 @@ target_language="French"
 prompt_prefix="Translate this sentence to"
 sentences=[]
 
-def execute_provider_pipeline(llm_pipeline):
+async def execute_provider_pipeline(llm_pipeline):
     global prompt_prefix
     global target_language
     global sentences
 
+    chunk_size = math.ceil(len(sentences) / 10)
+    chunks = [sentences[i:i + chunk_size] for i in range(0, len(sentences), chunk_size)]
+    # Make a list of lists, in order to preserve ordering.
+    sentences_out: list[ list[str] ] = [[] for i in range(0, len(chunks))]
+
+    print(f"% Split {len(sentences)} sentences into {len(chunks)} chunks, where every chunk is {len(chunks[0])} <= sentences")
+
     for provider in llm_pipeline:
         out_file = f"out_{provider}_{llm_providers[provider]['model']}-{target_language.lower()}.txt"
         print(f"% Executing {provider}-{llm_providers[provider]['model']} pipeline, output to {out_file}:")
-        
+
+        async_tasks = [] 
+
         if provider == "openai":
+            async_tasks: list[asyncio.Task] = [asyncio.to_thread(openai_task_runner, i, chunks[i], sentences_out) for i in range(0, len(chunks))]
+            print(f"% Starting {len(async_tasks)} async tasks for OpenAI")
+            await asyncio.gather(*async_tasks)
+            print(f"% Finished OpenAI tasks with {len(sentences_out)} sentences translated")
+
+            # Write to file.
             with open(out_file, "w") as f:
-                for s in sentences:          
-                    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+                for block in sentences_out:
+                    for s in block:
+                        f.write(s + "\n")
 
-                    resp = client.chat.completions.create(messages=[
-                            {
-                                "role": "user",
-                                "content": prompt_prefix + " " + target_language + ": " + s
-                            }
-                        ],
-                        model=f"{llm_providers[provider]['model']}"
-                    )
+# OpenAI task runner, which prompts OpenAI to translate a chunk of sentences.
+# TODO: Should be moved to a separate module for cleanliness.
+def openai_task_runner(idx: int, sentence_chunks: list[str], out_sentences: list[ list[str] ]):
+    global prompt_prefix, target_language
+    requests_serviced: int = 0
 
-                    if len(resp.choices) > 0:
-                        f.write(f"{resp.choices[0].message.content}\n")
+    print(f"% Starting OpenAI task {idx} with {len(sentence_chunks)} sentences")
 
+    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+    for s in sentence_chunks:
+        resp = client.chat.completions.create(messages=[
+                {
+                    "role": "user",
+                    "content": prompt_prefix + " " + target_language + ": " + s
+                }
+            ],
+            model="gpt-4o"
+        )
+
+        if len(resp.choices) > 0:
+            out_sentences[idx].append(resp.choices[0].message.content)
+            requests_serviced = requests_serviced + 1
+
+    print(f"% OpenAI task {idx} completed with {requests_serviced} sentences translated")
 
 # Entry point.
-def main():
+async def main():
     global prompt_prefix, target_language, sentences
     llm_pipeline = []
 
@@ -103,7 +132,7 @@ def main():
 
         print(f"% Ingested {len(sentences)} sentences from '{args.input_file}'")
 
-    execute_provider_pipeline(llm_pipeline)
+    await execute_provider_pipeline(llm_pipeline)
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
