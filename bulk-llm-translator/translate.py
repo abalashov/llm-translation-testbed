@@ -32,7 +32,7 @@ async def execute_provider_pipeline(llm_pipeline):
     # Make a list of lists, in order to preserve ordering.
     sentences_out: list[ list[str] ] = [[] for i in range(0, len(chunks))]
 
-    print(f"% Split {len(sentences)} sentences into {len(chunks)} chunks, where every chunk is {len(chunks[0])} <= sentences")
+    print(f"% Split {len(sentences)} sentences into {len(chunks)} chunks, where every chunk is <= {len(chunks[0])} sentences")
 
     for provider in llm_pipeline:
         out_file = f"out_{provider}_{llm_providers[provider]['model']}-{target_language.lower()}.txt"
