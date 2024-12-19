@@ -25,6 +25,7 @@ async def execute_provider_pipeline(llm_pipeline):
     global prompt_prefix
     global target_language
     global sentences
+    global parallel_runners
 
     chunk_size = math.ceil(len(sentences) / parallel_runners)
     chunks = [sentences[i:i + chunk_size] for i in range(0, len(sentences), chunk_size)]
@@ -79,7 +80,7 @@ def openai_task_runner(idx: int, sentence_chunks: list[str], out_sentences: list
 
 # Entry point.
 async def main():
-    global prompt_prefix, target_language, sentences
+    global prompt_prefix, target_language, sentences, parallel_runners
     llm_pipeline = []
 
     parser = argparse.ArgumentParser(description="Translate a file of sentences using a configurable prompt and a set of LLMs.")
