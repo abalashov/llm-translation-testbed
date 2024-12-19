@@ -33,7 +33,9 @@ A full list of command-line options can be obtained via `./translate.py -h`, but
 
 * `-i`, `--input-file` - the text file containing input sentences, one sentence per line;
 
-* `-prov`, `--providers` - a comma-separated list of LLM providers to use (e.g. `openai`, `google`, `anthropic`).
+* `-prov`, `--providers` - a comma-separated list of LLM providers to use (e.g. `openai`, `google`, `anthropic`);
+
+* `-r`, `--runners` - the number of API queries to run in parallel to a given LLM provider. This defaults to 10, and should be used cautiously.
 
 ### API keys from environment variables:
 
