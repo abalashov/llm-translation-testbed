@@ -39,24 +39,30 @@ async def execute_provider_pipeline(llm_pipeline):
 
         async_tasks = [] 
 
-        if provider == "openai":
-            with Progress() as progress:
-                progress_bars = [progress.add_task(f"Runner {i}", total=len(chunks[i])) for i in range(0, len(chunks))]
+        with Progress() as progress:
+            progress_bars = [progress.add_task(f"Runner {i}", total=len(chunks[i])) for i in range(0, len(chunks))]
 
-                async_tasks: list[asyncio.Task] = [
-                    asyncio.to_thread(openai_task_runner, i, chunks[i], progress, progress_bars[i], sentences_out) 
-                    for i in range(0, len(chunks))
-                ]
+            if provider.lower() == "openai":
+                runner = openai_task_runner
+            elif provider.lower() == "anthropic":
+                runner = anthropic_task_runner
+            else:
+                raise Exception("Unknown provider: " + provider)    
 
-                print(f"% Starting {len(async_tasks)} async tasks for OpenAI")
-                await asyncio.gather(*async_tasks)
-                print(f"% Finished OpenAI tasks with {len(sentences_out)} sentences translated")
+            async_tasks: list[asyncio.Task] = [
+                asyncio.to_thread(runner, i, chunks[i], progress, progress_bars[i], sentences_out) 
+                for i in range(0, len(chunks))
+            ]
 
-            # Write to file.
-            with open(out_file, "w") as f:
-                for block in sentences_out:
-                    for s in block:
-                        f.write(s + "\n")
+            print(f"% Starting {len(async_tasks)} async tasks for OpenAI")
+            await asyncio.gather(*async_tasks)
+            print(f"% Finished {provider} tasks with {len(sentences_out)} sentences translated")
+
+        # Write to file.
+        with open(out_file, "w") as f:
+            for block in sentences_out:
+                for s in block:
+                    f.write(s + "\n")
 
 # OpenAI task runner, which prompts OpenAI to translate a chunk of sentences.
 # TODO: Should be moved to a separate module for cleanliness.
