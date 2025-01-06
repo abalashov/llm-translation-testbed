@@ -20,7 +20,7 @@ llm_providers = {
 target_language="French"
 prompt_prefix="Translate this sentence to"
 sentences=[]
-parallel_runners=10
+parallel_runners=7
 
 async def execute_provider_pipeline(llm_pipeline):
     global prompt_prefix, target_language, sentences, parallel_runners
