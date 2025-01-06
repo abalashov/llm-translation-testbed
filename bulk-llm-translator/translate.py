@@ -7,12 +7,16 @@
 
 import argparse, os, sys, asyncio, math
 from openai import OpenAI
+from anthropic import Anthropic
 from rich.progress import Progress
 
 # Identifiers of acceptable LLM providers, and their permitted models.
 llm_providers = {
     "openai": {
         "model": "gpt-4o"
+    },
+    "anthropic": {
+        "model": "claude-3-5-sonnet-latest"
     }
 }
 
@@ -87,7 +91,7 @@ def openai_task_runner(
                     "content": prompt_prefix + " " + target_language + ": " + s
                 }
             ],
-            model="gpt-4o",
+            model=llm_providers["openai"]["model"],
             temperature=0.0
         )
 
@@ -97,6 +101,41 @@ def openai_task_runner(
             progress_mgr.update(progress_bar, advance=1)
 
     print(f"% OpenAI task {idx} completed with {requests_serviced} sentences translated")
+
+# Anthropic task runner, which prompts OpenAI to translate a chunk of sentences.
+# TODO: Should be moved to a separate module for cleanliness.
+def anthropic_task_runner(
+    idx: int, 
+    sentence_chunks: list[str], 
+    progress_mgr: Progress,
+    progress_bar: any,
+    out_sentences: list[ list[str] ]
+):
+    global prompt_prefix, target_language, llm_providers
+    requests_serviced: int = 0
+
+    print(f"% Starting Anthropic task {idx} with {len(sentence_chunks)} sentences")
+
+    client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+
+    for s in sentence_chunks:
+        resp = client.messages.create(messages=[
+                {
+                    "role": "user",
+                    "content": prompt_prefix + " " + target_language + ": " + s
+                }
+            ],
+            model=llm_providers["anthropic"]["model"],
+            temperature=0.0,
+            max_tokens=2048
+        )
+
+        if len(resp.content) > 0:
+            out_sentences[idx].append(resp.content[0].text)
+            requests_serviced = requests_serviced + 1
+            progress_mgr.update(progress_bar, advance=1)
+
+    print(f"% Anthropic task {idx} completed with {requests_serviced} sentences translated")
 
 # Entry point.
 async def main():
