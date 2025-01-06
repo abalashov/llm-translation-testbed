@@ -150,7 +150,7 @@ def anthropic_task_runner(
             progress_mgr.update(progress_bar, advance=1)
 
         # Add some delay in order to fly under 50 RPM rate limit.
-        time.sleep(0.25)
+        time.sleep(1.25)
 
     print(f"% Anthropic task {idx} completed with {requests_serviced} sentences translated")
 
