@@ -20,6 +20,14 @@ llm_providers = {
     }
 }
 
+# Filename suffixes based on provider and who is running it.
+file_suffix_map = {
+    # LLM1.a = Alex running OpenAI gpt-4o.
+    "openai": "LLM.1a",
+    # LLM2.a = Alex running Anthropic Claude 3.5 Sonnet.
+    "anthropic": "LLM.2a"
+}
+
 # Defaults/globals.
 target_language="French"
 prompt_prefix="Translate this sentence to"
@@ -38,7 +46,13 @@ async def execute_provider_pipeline(llm_pipeline):
     print(f"% Split {len(sentences)} sentences into {len(chunks)} chunks, where every chunk is <= {len(chunks[0])} sentences")
 
     for provider in llm_pipeline:
-        out_file = f"out_{provider}_{llm_providers[provider]['model']}-{target_language.lower()}.txt"
+        if provider not in llm_providers:
+            print(f"Error: No file suffix map entry for provider '{provider}'")
+            exit(1)
+
+        suffix = file_suffix_map[provider]
+
+        out_file = f"out_{provider}_{llm_providers[provider]['model']}-{target_language.lower()}_{suffix}.txt"
         print(f"% Executing {provider}-{llm_providers[provider]['model']} pipeline, output to {out_file}:")
 
         async_tasks = [] 
