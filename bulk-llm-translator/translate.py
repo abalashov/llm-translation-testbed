@@ -52,7 +52,7 @@ async def execute_provider_pipeline(llm_pipeline):
 
         suffix = file_suffix_map[provider]
 
-        out_file = f"out_{provider}_{llm_providers[provider]['model']}-{target_language.lower()}_{suffix}.txt"
+        out_file = f"out_en-{target_language.lower()}_{suffix}.txt"
         print(f"% Executing {provider}-{llm_providers[provider]['model']} pipeline, output to {out_file}:")
 
         async_tasks = [] 
