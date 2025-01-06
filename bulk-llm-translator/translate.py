@@ -141,7 +141,7 @@ def anthropic_task_runner(
             ],
             model=llm_providers["anthropic"]["model"],
             temperature=0.0,
-            max_tokens=256
+            max_tokens=512
         )
 
         if len(resp.content) > 0:
