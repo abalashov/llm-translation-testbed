@@ -5,7 +5,7 @@
 #
 # Alex Balashov <abalashov@evaristesys.com>
 
-import argparse, os, sys, asyncio, math
+import argparse, os, sys, asyncio, math, time 
 from openai import OpenAI
 from anthropic import Anthropic
 from rich.progress import Progress
@@ -148,6 +148,9 @@ def anthropic_task_runner(
             out_sentences[idx].append(resp.content[0].text)
             requests_serviced = requests_serviced + 1
             progress_mgr.update(progress_bar, advance=1)
+
+        # Add some delay in order to fly under 50 RPM rate limit.
+        time.sleep(0.25)
 
     print(f"% Anthropic task {idx} completed with {requests_serviced} sentences translated")
 
