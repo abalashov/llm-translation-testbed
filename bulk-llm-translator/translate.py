@@ -6,6 +6,7 @@
 # Alex Balashov <abalashov@evaristesys.com>
 
 import argparse, os, sys, asyncio, math, time 
+import google.generativeai as googleai
 from openai import OpenAI
 from anthropic import Anthropic
 from rich.progress import Progress
@@ -17,6 +18,9 @@ llm_providers = {
     },
     "anthropic": {
         "model": "claude-3-5-sonnet-latest"
+    },
+    "google": {
+        "model": "gemini-1.5-pro-latest"
     }
 }
 
@@ -25,7 +29,9 @@ file_suffix_map = {
     # LLM1.a = Alex running OpenAI gpt-4o.
     "openai": "LLM.1a",
     # LLM2.a = Alex running Anthropic Claude 3.5 Sonnet.
-    "anthropic": "LLM.2a"
+    "anthropic": "LLM.2a",
+    # LLM3.a = Alex running Gemini 1.5 Pro.
+    "google": "LLM.3a"
 }
 
 # Defaults/globals.
@@ -64,6 +70,8 @@ async def execute_provider_pipeline(llm_pipeline):
                 runner = openai_task_runner
             elif provider.lower() == "anthropic":
                 runner = anthropic_task_runner
+            elif provider.lower() == "google":
+                runner = google_task_runner
             else:
                 raise Exception("Unknown provider: " + provider)    
 
@@ -72,7 +80,7 @@ async def execute_provider_pipeline(llm_pipeline):
                 for i in range(0, len(chunks))
             ]
 
-            print(f"% Starting {len(async_tasks)} async tasks for OpenAI")
+            print(f"% Starting {len(async_tasks)} async tasks for: {provider}")
             await asyncio.gather(*async_tasks)
             print(f"% Finished {provider} tasks with {len(sentences_out)} sentences translated")
 
@@ -153,6 +161,43 @@ def anthropic_task_runner(
         time.sleep(1.25)
 
     print(f"% Anthropic task {idx} completed with {requests_serviced} sentences translated")
+
+# Anthropic task runner, which prompts OpenAI to translate a chunk of sentences.
+# TODO: Should be moved to a separate module for cleanliness.
+def google_task_runner(
+    idx: int, 
+    sentence_chunks: list[str], 
+    progress_mgr: Progress,
+    progress_bar: any,
+    out_sentences: list[ list[str] ]
+):
+    global prompt_prefix, target_language, llm_providers
+    requests_serviced: int = 0
+
+    print(f"% Starting Google task {idx} with {len(sentence_chunks)} sentences")
+
+    googleai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+    
+    model = googleai.GenerativeModel(llm_providers["google"]["model"])
+
+    for s in sentence_chunks:
+        resp = model.generate_content(
+            prompt_prefix + " " + target_language + ": " + s,
+            generation_config=googleai.GenerationConfig(
+                temperature=0.0
+            )
+        )
+
+        if len(resp.candidates) == 1:
+            out_sentences[idx].append(resp.candidates[0].content.parts[0].text.strip())
+            requests_serviced = requests_serviced + 1
+            progress_mgr.update(progress_bar, advance=1)
+
+        # Add some delay in order to fly under 15 RPM rate limit.
+        time.sleep(4.5)
+
+    print(f"% Google task {idx} completed with {requests_serviced} sentences translated")
+
 
 # Entry point.
 async def main():
