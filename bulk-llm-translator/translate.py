@@ -194,8 +194,8 @@ def google_task_runner(
             requests_serviced = requests_serviced + 1
             progress_mgr.update(progress_bar, advance=1)
 
-        # Add some delay in order to fly under 15 RPM rate limit.
-        time.sleep(4.5)
+        # Add some delay in order to fly under 1000 RPM rate limit.
+        time.sleep(0.07)
 
     print(f"% Google task {idx} completed with {requests_serviced} sentences translated")
 
