@@ -5,5 +5,5 @@ python3 -m venv our-env
 
 source our-env/bin/activate
 pip install --upgrade pip
-pip install openai rich anthropic
+pip install openai rich anthropic google.generativeai
 exit
