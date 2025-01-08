@@ -39,9 +39,10 @@ target_language="French"
 prompt_prefix="Translate this sentence to"
 sentences=[]
 parallel_runners=7
+input_file=""
 
 async def execute_provider_pipeline(llm_pipeline):
-    global prompt_prefix, target_language, sentences, parallel_runners
+    global prompt_prefix, target_language, sentences, parallel_runners, input_file
 
     chunk_size = math.ceil(len(sentences) / parallel_runners)
     chunks = [sentences[i:i + chunk_size] for i in range(0, len(sentences), chunk_size)]
@@ -58,7 +59,13 @@ async def execute_provider_pipeline(llm_pipeline):
 
         suffix = file_suffix_map[provider]
 
-        out_file = f"out_en-{target_language.lower()}_{suffix}.txt"
+        # Split input file by /, in case of a complex path, and take the last element.
+        input_file_prox = input_file.split("/")[-1]
+
+        # Get a current YYYYMMDDHHMMSS timestamp.
+        current_time = time.strftime("%Y%m%d%H%M%S", time.localtime())
+
+        out_file = f"out-[{input_file_prox}]-en-{target_language.lower()}-{current_time}-{suffix}.txt"
         print(f"% Executing {provider}-{llm_providers[provider]['model']} pipeline, output to {out_file}:")
 
         async_tasks = [] 
@@ -199,7 +206,7 @@ def google_task_runner(
 
 # Entry point.
 async def main():
-    global prompt_prefix, target_language, sentences, parallel_runners
+    global prompt_prefix, target_language, sentences, parallel_runners, input_file
     llm_pipeline = []
 
     parser = argparse.ArgumentParser(description="Translate a file of sentences using a configurable prompt and a set of LLMs.")
@@ -256,6 +263,7 @@ async def main():
             sentences = f.readlines()
 
         print(f"% Ingested {len(sentences)} sentences from '{args.input_file}'")
+        input_file = args.input_file
 
     await execute_provider_pipeline(llm_pipeline)
 
