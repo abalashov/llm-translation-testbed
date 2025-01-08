@@ -1,2 +1,3 @@
 **/out*.txt
 test_data/**.txt
+inputs/**
