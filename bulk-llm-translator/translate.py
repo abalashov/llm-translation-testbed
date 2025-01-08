@@ -90,7 +90,7 @@ async def execute_provider_pipeline(llm_pipeline):
             print(f"% Starting {len(async_tasks)} async tasks for: {provider}")
             start_time = time.time()
             await asyncio.gather(*async_tasks)
-            print(f"% Finished {provider} tasks in {time.strftime("%H:%M:%S", time.gmtime(time.time() - start_time))}")
+            print(f"% Finished {provider} tasks in {time.strftime('%H:%M:%S', time.gmtime(time.time() - start_time))}")
 
         # Write to file.
         with open(out_file, "w") as f:
