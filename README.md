@@ -2,7 +2,7 @@
 
 ## Overview
 
-This code is intended to facilitate the collaboration of Yuri Balashov, Shiho Fukuda Koski and Alex Balashov in evaluating the quality of LLM-assisted language translation against traditional computer-assisted translation (CAT) methods.
+This code is intended to facilitate the collaboration of Yuri Balashov, Shiho Fukuda Koski and Alex Balashov in evaluating the quality of LLM-generated language translation against traditional neural machine translation (NMT) outputs using premium human translations as reference.
 
 ## llm-bulk-translator
 
