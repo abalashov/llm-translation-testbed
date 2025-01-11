@@ -37,6 +37,8 @@ A full list of command-line options can be obtained via `./translate.py -h`, but
 
 * `-r`, `--runners` - the number of API queries to run in parallel to a given LLM provider. This defaults to 10, and should be used cautiously.
 
+* `-b`, `--batch-size` - the number of lines to batch into a single API request. This defaults to 1, which is to say that inputs will be translated line-by-line by default. If the number of lines is > 1, the prompt should appropriately reflect this, e.g. "Please translate the following list of sentences..."
+
 ### API keys from environment variables:
 
 In addition to the required and optional command-line arguments, it is necessary to provide an API key for every LLM provider suppplied. For example, if the `openai` provider is included in the `--providers` list, the environment variable `OPENAI_API_KEY` must be set, and the same applies for `GOOGLE_API_KEY` and `ANTHROPIC_API_KEY` and so on.
