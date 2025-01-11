@@ -5,7 +5,7 @@
 #
 # Alex Balashov <abalashov@evaristesys.com>
 
-import argparse, os, sys, asyncio, math, time 
+import argparse, os, sys, asyncio, math, time
 import google.generativeai as googleai
 from openai import OpenAI
 from anthropic import Anthropic
@@ -38,11 +38,12 @@ file_suffix_map = {
 target_language="French"
 prompt_prefix="Translate this sentence to"
 sentences=[]
+batch_size=1
 parallel_runners=7
 input_file=""
 
 async def execute_provider_pipeline(llm_pipeline):
-    global prompt_prefix, target_language, sentences, parallel_runners, input_file
+    global prompt_prefix, target_language, sentences, parallel_runners, input_file, batch_size
 
     chunk_size = math.ceil(len(sentences) / parallel_runners)
     chunks = [sentences[i:i + chunk_size] for i in range(0, len(sentences), chunk_size)]
@@ -50,7 +51,7 @@ async def execute_provider_pipeline(llm_pipeline):
     # Make a list of lists, in order to preserve ordering.
     sentences_out: list[ list[str] ] = [[] for i in range(0, len(chunks))]
 
-    print(f"% Split {len(sentences)} sentences into {len(chunks)} chunks, where every chunk is <= {len(chunks[0])} sentences")
+    print(f"% Split {len(sentences)} {batch_size}-sentence batches into {len(chunks)} chunks, where every chunk is <= {len(chunks[0])} sentence-batches")
 
     for provider in llm_pipeline:
         if provider not in llm_providers:
@@ -110,7 +111,8 @@ def openai_task_runner(
     global prompt_prefix, target_language
     requests_serviced: int = 0
 
-    print(f"% Starting OpenAI task {idx} with {len(sentence_chunks)} sentences")
+    print(f"% Starting OpenAI task {idx} with {len(sentence_chunks)} sentence-batches")
+    print(f"target_language: {target_language}, prompt_prefix: '{prompt_prefix}'")
 
     client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
@@ -130,7 +132,7 @@ def openai_task_runner(
             requests_serviced = requests_serviced + 1
             progress_mgr.update(progress_bar, advance=1)
 
-    print(f"% OpenAI task {idx} completed with {requests_serviced} sentences translated")
+    print(f"% OpenAI task {idx} completed with {requests_serviced} sentences-batches translated")
 
 # Anthropic task runner, which prompts OpenAI to translate a chunk of sentences.
 # TODO: Should be moved to a separate module for cleanliness.
@@ -144,7 +146,7 @@ def anthropic_task_runner(
     global prompt_prefix, target_language, llm_providers
     requests_serviced: int = 0
 
-    print(f"% Starting Anthropic task {idx} with {len(sentence_chunks)} sentences")
+    print(f"% Starting Anthropic task {idx} with {len(sentence_chunks)} sentence-batches")
 
     client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 
@@ -168,7 +170,7 @@ def anthropic_task_runner(
         # Add some delay in order to fly under 50 RPM rate limit.
         time.sleep(1.25)
 
-    print(f"% Anthropic task {idx} completed with {requests_serviced} sentences translated")
+    print(f"% Anthropic task {idx} completed with {requests_serviced} sentence-batches translated")
 
 # Anthropic task runner, which prompts OpenAI to translate a chunk of sentences.
 # TODO: Should be moved to a separate module for cleanliness.
@@ -206,7 +208,7 @@ def google_task_runner(
 
 # Entry point.
 async def main():
-    global prompt_prefix, target_language, sentences, parallel_runners, input_file
+    global prompt_prefix, target_language, sentences, parallel_runners, input_file, batch_size
     llm_pipeline = []
 
     parser = argparse.ArgumentParser(description="Translate a file of sentences using a configurable prompt and a set of LLMs.")
@@ -214,6 +216,7 @@ async def main():
     parser.add_argument("-tl", "--target-language", required=True, type=str, help="Target language (natural name, e.g. 'French')")
     parser.add_argument("-p", "--prompt", type=str, help="LLM prompt to prefix to the translation request for every sentence, terminated by language name automatically")
     parser.add_argument("-r", "--runners", type=int, help="Number of parallel runners to use", default=10)
+    parser.add_argument("-b", "--batch-size", type=int, help="Number of sentences to translate in a single batch", default=1)
 
     parser.add_argument(
         "-prov", "--providers", 
@@ -231,8 +234,12 @@ async def main():
     if args.runners:
         parallel_runners = args.runners
 
+    if args.batch_size:
+        print(f"% Using batch size: {args.batch_size}")
+        batch_size = args.batch_size
+
     if args.prompt:
-        prompt_prefix = f"{args.prompt} {target_language}:"
+        prompt_prefix = args.prompt
         print(f"% Set custom prompt: '{prompt_prefix}'")
     else:
         prompt_prefix = f"{prompt_prefix} {target_language}:"
@@ -262,7 +269,27 @@ async def main():
         with open(args.input_file, "r") as f:
             sentences = f.readlines()
 
-        print(f"% Ingested {len(sentences)} sentences from '{args.input_file}'")
+        # If batch_size is greater than 1, consolidate sentences into sentence-batches.
+        if batch_size > 1:
+            num_batches = math.ceil(len(sentences) / batch_size)
+            accum: list[ list[str] ] = []
+
+            for i in range(0, num_batches):
+                accum.append([])
+
+                for j in range(batch_size * i, batch_size * (i + 1)):
+                    accum[i].append(sentences[j].strip())
+
+                    if j == (len(sentences) - 1):
+                        break
+
+            print(f"% Split {len(sentences)} sentences into {num_batches} batches of >= {batch_size} sentences each")
+
+            sentences = []
+            for batch in accum:
+                sentences.append("\n".join(batch))
+
+        print(f"% Ingested {len(sentences)} sentence-batches from '{args.input_file}'")
         input_file = args.input_file
 
     await execute_provider_pipeline(llm_pipeline)
