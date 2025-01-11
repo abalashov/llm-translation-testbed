@@ -66,7 +66,12 @@ async def execute_provider_pipeline(llm_pipeline):
         # Get a current YYYYMMDDHHMMSS timestamp.
         current_time = time.strftime("%Y%m%d%H%M%S", time.localtime())
 
-        out_file = f"out-[{input_file_prox}]-en-{target_language.lower()}-{current_time}-{suffix}.txt"
+        if batch_size > 1:
+            batch_portion = f"-bs{batch_size}-"
+        else:
+            batch_portion = ""
+
+        out_file = f"out-[{input_file_prox}]-en-{target_language.lower()}{batch_portion}{current_time}-{suffix}.txt"
         print(f"% Executing {provider}-{llm_providers[provider]['model']} pipeline, output to {out_file}:")
 
         async_tasks = [] 
