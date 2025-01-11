@@ -189,7 +189,7 @@ def google_task_runner(
     global prompt_prefix, target_language, llm_providers
     requests_serviced: int = 0
 
-    print(f"% Starting Google task {idx} with {len(sentence_chunks)} sentences")
+    print(f"% Starting Google task {idx} with {len(sentence_chunks)} sentence-batches")
 
     googleai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
     
