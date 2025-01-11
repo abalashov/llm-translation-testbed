@@ -132,7 +132,7 @@ def openai_task_runner(
             requests_serviced = requests_serviced + 1
             progress_mgr.update(progress_bar, advance=1)
 
-    print(f"% OpenAI task {idx} completed with {requests_serviced} sentences-batches translated")
+    print(f"% OpenAI task {idx} completed with {requests_serviced} sentence-batches translated")
 
 # Anthropic task runner, which prompts OpenAI to translate a chunk of sentences.
 # TODO: Should be moved to a separate module for cleanliness.
