@@ -117,7 +117,6 @@ def openai_task_runner(
     requests_serviced: int = 0
 
     print(f"% Starting OpenAI task {idx} with {len(sentence_chunks)} sentence-batches")
-    print(f"target_language: {target_language}, prompt_prefix: '{prompt_prefix}'")
 
     client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
