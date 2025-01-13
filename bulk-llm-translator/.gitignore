@@ -3,3 +3,4 @@ test_data/**.txt
 inputs/**
 .DS_Store
 *.zip
+keys.env
