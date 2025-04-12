@@ -71,3 +71,13 @@ This invocation results in the following output to `out_openai_gpt-4o-russian.tx
 Аутентификация необходима для обеспечения целостности данных.
 Аутентификация помогает.
 ```
+
+### Citation
+
+if you would like to use our data or code, please cite the associated paper:
+
+```
+@article {
+    TBA
+}
+```
