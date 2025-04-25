@@ -77,7 +77,13 @@ This invocation results in the following output to `out_openai_gpt-4o-russian.tx
 if you would like to use our data or code, please cite the associated paper:
 
 ```
-@article {
-    TBA
+@misc{balashov2025translationanalyticsfreelancersi,
+      title={Translation Analytics for Freelancers: I. Introduction, Data Preparation, Baseline Evaluations}, 
+      author={Yuri Balashov and Alex Balashov and Shiho Fukuda Koski},
+      year={2025},
+      eprint={2504.14619},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/2504.14619}, 
 }
 ```
