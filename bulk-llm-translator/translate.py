@@ -99,7 +99,7 @@ async def execute_provider_pipeline(llm_pipeline):
             print(f"% Finished {provider} tasks in {time.strftime('%H:%M:%S', time.gmtime(time.time() - start_time))}")
 
         # Write to file.
-        with open(out_file, "w") as f:
+        with open(out_file, "w", encoding="utf-8", errors="replace") as f:
             for block in sentences_out:
                 for s in block:
                     f.write(s + "\n")
