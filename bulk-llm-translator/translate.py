@@ -6,10 +6,11 @@
 # Alex Balashov <abalashov@evaristesys.com>
 
 import argparse, os, sys, asyncio, math, time
+from __future__ import annotations
 import google.generativeai as googleai
 from openai import OpenAI
 from anthropic import Anthropic
-from rich.progress import Progress
+from rich.progress import Progress, TaskID
 
 # Identifiers of acceptable LLM providers, and their permitted models.
 llm_providers = {
@@ -42,7 +43,7 @@ batch_size=1
 parallel_runners=7
 input_file=""
 
-async def execute_provider_pipeline(llm_pipeline):
+async def execute_provider_pipeline(llm_pipeline: list[str]) -> None:
     global prompt_prefix, target_language, sentences, parallel_runners, input_file, batch_size
 
     chunk_size = math.ceil(len(sentences) / parallel_runners)
@@ -110,9 +111,9 @@ def openai_task_runner(
     idx: int, 
     sentence_chunks: list[str], 
     progress_mgr: Progress,
-    progress_bar: any,
+    progress_bar: TaskID,
     out_sentences: list[ list[str] ]
-):
+) -> None:
     global prompt_prefix, target_language
     requests_serviced: int = 0
 
@@ -144,9 +145,9 @@ def anthropic_task_runner(
     idx: int, 
     sentence_chunks: list[str], 
     progress_mgr: Progress,
-    progress_bar: any,
+    progress_bar: TaskID,
     out_sentences: list[ list[str] ]
-):
+) -> None:
     global prompt_prefix, target_language, llm_providers
     requests_serviced: int = 0
 
@@ -182,9 +183,9 @@ def google_task_runner(
     idx: int, 
     sentence_chunks: list[str], 
     progress_mgr: Progress,
-    progress_bar: any,
+    progress_bar: TaskID,
     out_sentences: list[ list[str] ]
-):
+) -> None:
     global prompt_prefix, target_language, llm_providers
     requests_serviced: int = 0
 
@@ -211,7 +212,7 @@ def google_task_runner(
 
 
 # Entry point.
-async def main():
+async def main() -> None:
     global prompt_prefix, target_language, sentences, parallel_runners, input_file, batch_size
     llm_pipeline = []
 
